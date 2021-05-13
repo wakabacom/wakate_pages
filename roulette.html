@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>My first Vue app</title>
+  <script src="https://unpkg.com/vue"></script>
+  <style>
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      align-content: space-between;
+    }
+
+    .item {
+      flex-basis: 20%;
+    }
+    .active {
+      background-color: aqua;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <input type="text" v-model="newName">
+    <button @click="addList">追加</button>
+    ※追加したデータは保持されます。
+    <div>
+      <h4>候補</h4>
+      <div class="container">
+        <div v-for="person in subList" @click="changeState(person)" class="item">{{person.name}}</div>
+      </div>
+    </div>
+    ※クリックで↑↓を移動できます。
+    <div>
+      <h4>ルーレット対象</h4>
+      <div class="container">
+        <div v-for="person in mainList" @click="changeState(person)" class="item"
+          v-bind:class="{active: picked==person}">{{person.name}}</div>
+      </div>
+    </div>
+    <div>
+      <div v-if="isStarted==false"><button @click="start">ルーレット開始</button></div>
+      <div v-else><button @click="stop">ストップ！</button></div>
+      <h3>ルーレット結果</h3>
+      <div v-show="show">当選したのは <span style="font-size: large;">{{picked?.name}}</span> さんです！</div>
+    </div>
+  </div>
+
+  <script>
+    var app = new Vue({
+      el: '#app',
+      data: {
+        newName: '',
+        isStarted: false,
+        pos: 0,
+        picked: null,
+        show: false,
+        list: [
+          { name: 'テスト1', state: false },
+          { name: 'テスト2', state: false },
+          { name: 'テスト3', state: false },
+          { name: 'テスト4', state: false },
+          { name: '追加済み1', state: true },
+          { name: '追加済み2', state: true },
+          { name: '追加済み3', state: true },
+          { name: '追加済み4', state: true },
+          { name: '追加済み5', state: true }
+        ]
+      },
+      methods: {
+        addList() {
+          this.list.push({ name: this.newName, state: true })
+          this.newName = ''
+          this.saveList()
+        },
+        changeState(person) {
+          person.state = person.state ? false : true
+          this.saveList()
+        },
+        start() {
+          this.isStarted = true
+          this.show = false
+          this.move()
+        },
+        stop() {
+          this.isStarted = false
+          this.show = true
+        },
+        move() {
+          if (this.isStarted == false) {
+            return
+          }
+          this.pos += 1
+          if (!this.mainList[this.pos]) {
+            this.pos = 0
+          }
+          this.picked = this.mainList[this.pos]
+          setTimeout(this.move, 12)
+        },
+        saveList(){
+          localStorage.setItem('rouletteList', JSON.stringify(this.list))
+        },
+        loadList(){
+          if(localStorage.getItem('rouletteList')){
+            this.list = JSON.parse(localStorage.getItem('rouletteList'))
+          }else{
+            this.list = []
+          }
+        }
+      },
+      computed: {
+        mainList() {
+          return this.list.filter(person => person.state == true)
+        },
+        subList() {
+          return this.list.filter(person => person.state == false)
+        }
+      },
+      mounted() {
+        this.loadList()
+      }
+    })
+  </script>
+</body>
+
+</html>
